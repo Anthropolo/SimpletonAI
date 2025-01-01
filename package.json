@@ -1,0 +1,34 @@
+{
+  "name": "simpleton-ai",
+  "version": "0.1.0",
+  "description": "NextJS-based AI framework for data processing and model training",
+  "main": "dist/index.js",
+  "bin": {
+    "simpleton": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "tsc && next build",
+    "start": "next start",
+    "cli": "ts-node src/cli/index.ts"
+  },
+  "dependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "commander": "^11.0.0",
+    "next": "^14.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "typescript": "^5.0.0",
+    "xlsx": "^0.18.0",
+    "pdf-parse": "^1.1.1",
+    "hnswlib-node": "^1.4.2",
+    "axios": "^1.6.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.0",
+    "@types/pdf-parse": "^1.1.4"
+  }
+}
