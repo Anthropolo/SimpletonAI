@@ -6,7 +6,7 @@ A NextJS-based backend framework for AI tasks with built-in CLI, Ollama integrat
 
 - 🚀 Built on Next.js and TypeScript
 - 🛠️ Powerful CLI interface
-- 📊 Support for Excel and PDF dataset processing
+- 📊 Support for CSV and text dataset processing
 - 🧠 Integrated with Ollama for embeddings and inference
 - 💾 In-memory vector store with persistence
 - 🔄 Automatic data chunking and processing
@@ -14,6 +14,10 @@ A NextJS-based backend framework for AI tasks with built-in CLI, Ollama integrat
 - ⚡ Real-time inference capabilities
 - 🎨 Extensible React components
 - 📁 Local file storage system
+- 🤖 Ready-to-use AI application templates
+- 🔍 Built-in RAG (Retrieval-Augmented Generation) support
+- 💬 Chatbot creation capabilities
+- 🎯 AI Agent framework
 
 ## Prerequisites
 
@@ -24,112 +28,153 @@ A NextJS-based backend framework for AI tasks with built-in CLI, Ollama integrat
 
 ## Quick Start
 
-1. Clone and install dependencies:
+1. Install SimpletonAI:
 ```bash
-git clone <your-repo>
-cd simpleton-ai
-npm install
+npm install simpleton-ai
 ```
 
-2. Build and link the CLI:
+2. Initialize your project:
 ```bash
-npm run build
-npm link # To use the CLI globally
+npx simpleton init
 ```
 
-3. Initialize your project:
+3. Start the development server:
 ```bash
-simpleton init
+npm run dev
 ```
 
-## Detailed CLI Usage
+## Use Cases
 
-### Dataset Management
+### 1. Building a RAG Application
 
-#### Upload Dataset
-Upload Excel or PDF files for processing:
-```bash
-# Upload Excel file
-simpleton upload ./data/mydata.xlsx --type excel
+```typescript
+import { createRagApplication } from 'simpleton-ai';
 
-# Upload PDF document
-simpleton upload ./docs/paper.pdf --type pdf
+async function main() {
+  const rag = await createRagApplication();
+  
+  // Query your knowledge base
+  const answer = await rag.queryKnowledgeBase(
+    "What are the key features of SimpletonAI?"
+  );
+}
 ```
 
-#### Chunk Data
-Split your dataset into manageable chunks:
-```bash
-# Default chunk size (1000 tokens)
-simpleton chunk dataset_123
+### 2. Creating a Chatbot
 
-# Custom chunk size
-simpleton chunk dataset_123 --size 500
+```typescript
+import { createChatbot } from 'simpleton-ai';
+
+async function main() {
+  const chatbot = await createChatbot();
+  
+  // Start chatting
+  const response = await chatbot.chat("Tell me about AI frameworks");
+  
+  // Get conversation history
+  const history = chatbot.getHistory();
+}
+```
+
+### 3. Building an AI Agent
+
+```typescript
+import { createAgent } from 'simpleton-ai';
+
+async function main() {
+  const agent = await createAgent();
+  
+  // Add custom tools
+  agent.addTool({
+    name: 'weather',
+    description: 'Get weather information',
+    execute: async (location) => {
+      // Implement weather lookup
+    }
+  });
+  
+  // Let the agent solve tasks
+  const result = await agent.think(
+    "Analyze the weather data and summarize the trends"
+  );
+}
+```
+
+## CLI Usage
+
+### Data Processing Pipeline
+
+1. Upload your dataset:
+```bash
+simpleton upload ./data/knowledge_base.csv
+```
+
+2. Create chunks:
+```bash
+simpleton chunk <dataset-id>
+```
+
+3. Generate embeddings:
+```bash
+simpleton vectorize <dataset-id>
 ```
 
 ### Vector Operations
 
-#### Vectorize Data
-Create embeddings using Ollama:
 ```bash
-# Using default model (llama2)
-simpleton vectorize dataset_123
+# List all vectors
+simpleton list vectors
 
-# Specify different model
-simpleton vectorize dataset_123 --model llama2-uncensored
-```
-
-### Model Operations
-
-#### Train Model
-Fine-tune models using your data:
-```bash
-# Basic training
-simpleton train dataset_123
-
-# Advanced training options
-simpleton train dataset_123 --model llama2 --epochs 3 --batch-size 32
-```
-
-#### Serve Model
-Start the inference server:
-```bash
-# Default port (3000)
-simpleton serve
-
-# Custom port
-simpleton serve --port 8080
+# Search vectors
+simpleton search "your query here"
 ```
 
 ## API Reference
 
-### Inference Endpoint
+### RAG Endpoints
 
-#### POST /api/inference
-Make inference requests to your model.
+#### POST /api/rag/query
+Query your knowledge base with RAG.
 
-Request body:
+Request:
 ```json
 {
-  "query": "What is the capital of France?",
-  "model": "llama2",
+  "query": "What is SimpletonAI?",
   "options": {
-    "temperature": 0.7,
-    "max_tokens": 100
+    "numResults": 3,
+    "threshold": 0.7
   }
 }
 ```
 
-Response:
+### Chatbot Endpoints
+
+#### POST /api/chat
+Interact with the chatbot.
+
+Request:
 ```json
 {
-  "completion": "The capital of France is Paris.",
-  "similarDocs": {
-    "ids": [1, 2, 3],
-    "distances": [0.1, 0.2, 0.3]
-  },
-  "metadata": {
-    "model": "llama2",
-    "processingTime": "0.5s"
+  "message": "Tell me about AI",
+  "conversationId": "123",
+  "options": {
+    "temperature": 0.7
+  }
+}
+```
+
+### Agent Endpoints
+
+#### POST /api/agent/task
+Submit a task to the AI agent.
+
+Request:
+```json
+{
+  "task": "Analyze this dataset",
+  "tools": ["search", "calculate"],
+  "context": {
+    "datasetId": "123"
   }
 }
 ```
@@ -144,108 +189,73 @@ Response:
 │   ├── chunks/           # Processed data chunks
 │   ├── vectors/          # Vector embeddings
 │   └── models/           # Trained models
-├── config/               # Configuration files
-│   └── simpleton.config.json
 ├── src/
 │   ├── cli/             # CLI implementation
-│   │   ├── commands/    # Individual CLI commands
-│   │   └── index.ts     # CLI entry point
 │   ├── lib/             # Core libraries
 │   │   ├── vectorStore.ts
-│   │   └── ollamaClient.ts
-│   ├── pages/           # Next.js pages
-│   │   └── api/         # API routes
+│   │   ├── ollamaClient.ts
+│   │   ├── rag.ts
+│   │   ├── chatbot.ts
+│   │   └── agent.ts
+│   ├── app/             # Next.js app
 │   └── components/      # React components
-└── tests/               # Test files
+└── examples/            # Example implementations
+    ├── rag.ts
+    ├── chatbot.ts
+    ├── agent.ts
+    └── integration.ts
 ```
 
-### Core Components
+## Best Practices
 
-#### Vector Store
-The vector store uses HNSWLib for efficient similarity search:
-- Cosine similarity metric
-- In-memory storage with persistence
-- Configurable dimensions and max elements
-- Fast nearest neighbor search
+### 1. Data Management
+- Organize data into logical datasets
+- Use appropriate chunk sizes (default 1000 tokens)
+- Regularly update vector embeddings
+- Monitor vector store size
 
-#### Ollama Integration
-Built-in integration with Ollama for:
-- Text embeddings
-- Model inference
-- Fine-tuning capabilities
-- Multiple model support
+### 2. Performance
+- Implement caching for frequent queries
+- Use batch processing for large datasets
+- Configure vector store parameters based on your data size
+
+### 3. Security
+- Secure your Ollama endpoint
+- Implement rate limiting
+- Validate all user inputs
+- Handle sensitive information properly
+
+### 4. Development
+- Start with example templates
+- Use TypeScript for type safety
+- Follow the modular architecture
+- Write tests for custom tools
 
 ## Configuration
-
-### Full Configuration Options
 
 ```json
 {
   "vectorStore": {
-    "type": "memory",
-    "dimension": 384,
-    "maxElements": 100000,
-    "efConstruction": 200,
-    "M": 16
+    "dimension": 768,
+    "similarity": "cosine",
+    "maxElements": 100000
   },
   "ollama": {
-    "baseUrl": "http://localhost:11434",
-    "defaultModel": "llama2",
-    "timeout": 30000,
-    "maxRetries": 3
+    "baseUrl": "http://127.0.0.1:11434",
+    "defaultModel": "nomic-embed-text",
+    "timeout": 30000
   },
-  "storage": {
-    "type": "local",
-    "uploadDir": "data/uploads",
-    "maxFileSize": "100mb",
-    "allowedTypes": ["xlsx", "pdf"]
-  },
-  "server": {
-    "port": 3000,
-    "host": "localhost",
-    "cors": {
-      "origin": "*",
-      "methods": ["GET", "POST"]
-    }
+  "rag": {
+    "numResults": 3,
+    "minSimilarity": 0.7
   }
 }
 ```
 
-## Error Handling
-
-The framework includes comprehensive error handling:
-- Detailed error messages
-- Error codes for API responses
-- Automatic retries for transient failures
-- Logging system for debugging
-
-## Best Practices
-
-1. **Data Management**
-   - Regularly clean up unused datasets
-   - Monitor vector store memory usage
-   - Use appropriate chunk sizes for your use case
-
-2. **Model Usage**
-   - Start with smaller models for testing
-   - Monitor Ollama resource usage
-   - Cache frequently used embeddings
-
-3. **API Implementation**
-   - Implement rate limiting for production
-   - Add authentication for sensitive operations
-   - Use appropriate timeout values
-
 ## Contributing
 
-Contributions are welcome! Please read our contributing guidelines and submit pull requests to our repository.
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ## License
 
-MIT License - see LICENSE file for details
-
-## Support
-
-- GitHub Issues: [Report a bug](https://github.com/yourusername/simpleton-ai/issues)
-- Documentation: [Full documentation](https://docs.simpleton-ai.com)
-- Discord: [Join our community](https://discord.gg/simpleton-ai)
+MIT License - see [LICENSE](LICENSE) for details.

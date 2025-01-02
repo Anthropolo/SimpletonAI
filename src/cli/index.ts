@@ -4,7 +4,7 @@ import { Command } from 'commander';
 import { initializeProject } from './commands/init.js';
 import { uploadDataset } from './commands/upload.js';
 import { chunkData } from './commands/chunk.js';
-import { vectorize } from './commands/vectorize.js';
+import { vectorizeData } from './commands/vectorize.js';
 import { trainModel } from './commands/train.js';
 import { startServer } from './commands/serve.js';
 import { listDatasets, listChunks, listVectors } from './commands/list.js';
@@ -77,25 +77,24 @@ program
   .option('-s, --size <size>', 'Chunk size', '1000')
   .action(async (datasetId, options) => {
     try {
-      const chunkCount = await chunkData(datasetId, options);
-      console.log(`Created ${chunkCount} chunks`);
+      const chunkSize = parseInt(options.size);
+      await chunkData(datasetId, { size: chunkSize });
     } catch (error) {
-      console.error('Failed to chunk data:', error);
+      console.error('Error:', error);
       process.exit(1);
     }
   });
 
 program
   .command('vectorize')
-  .description('Vectorize chunks using Ollama')
-  .argument('<datasetId>', 'ID of the dataset')
-  .option('-m, --model <model>', 'Ollama model to use', 'llama2')
+  .description('Generate vector embeddings for chunks')
+  .argument('<datasetId>', 'ID of the dataset to vectorize')
+  .option('-m, --model <model>', 'Model to use for embeddings', 'nomic-embed-text')
   .action(async (datasetId, options) => {
     try {
-      const vectorCount = await vectorize(datasetId, options);
-      console.log(`Vectorized ${vectorCount} chunks`);
+      await vectorizeData(datasetId, { model: options.model });
     } catch (error) {
-      console.error('Failed to vectorize data:', error);
+      console.error('Error:', error);
       process.exit(1);
     }
   });

@@ -1,223 +1,121 @@
 'use client';
 
 import React from 'react';
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
-import { formatBytes } from '@/utils/format';
+import { DatasetInfo, ChunkInfo, VectorInfo } from '@/types/data';
+import { formatBytes, formatDate } from '@/utils/format';
 
 interface DataTableProps {
-  data: any[];
   type: 'datasets' | 'chunks' | 'vectors';
+  data: DatasetInfo[] | ChunkInfo[] | VectorInfo[];
   onChunk?: (id: string) => void;
   onVectorize?: (id: string) => void;
-  processingStates?: Record<string, boolean>;
+  processingStates: Record<string, boolean>;
 }
 
-export default function DataTable({ data, type, onChunk, onVectorize, processingStates = {} }: DataTableProps) {
-  const [expandedRows, setExpandedRows] = React.useState<Record<string, boolean>>({});
+export default function DataTable({ type, data, onChunk, onVectorize, processingStates }: DataTableProps) {
+  const renderDatasetRow = (item: DatasetInfo) => (
+    <tr key={item.id} className="hover:bg-gray-50">
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.name}</td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatBytes(item.size)}</td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(item.createdAt)}</td>
+      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <button
+          onClick={() => onChunk?.(item.id)}
+          disabled={processingStates[item.id]}
+          className="text-blue-600 hover:text-blue-900 disabled:opacity-50 disabled:cursor-not-allowed mr-4"
+        >
+          {processingStates[item.id] ? 'Processing...' : 'Create Chunks'}
+        </button>
+      </td>
+    </tr>
+  );
 
-  const toggleRow = (id: string) => {
-    setExpandedRows(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  };
+  const renderChunkRow = (item: ChunkInfo) => (
+    <tr key={item.id} className="hover:bg-gray-50">
+      <td className="px-6 py-4 text-sm text-gray-900">{item.name}</td>
+      <td className="px-6 py-4 text-sm text-gray-500">{formatBytes(item.size)}</td>
+      <td className="px-6 py-4 text-sm text-gray-500">{formatDate(item.createdAt)}</td>
+      <td className="px-6 py-4 text-sm text-gray-500">{item.preview}</td>
+      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <button
+          onClick={() => onVectorize?.(item.id)}
+          disabled={processingStates[item.id]}
+          className="text-blue-600 hover:text-blue-900 disabled:opacity-50 disabled:cursor-not-allowed mr-4"
+        >
+          {processingStates[item.id] ? 'Processing...' : 'Vectorize'}
+        </button>
+      </td>
+    </tr>
+  );
 
-  const renderHeader = () => {
+  const renderVectorRow = (item: VectorInfo) => (
+    <tr key={item.id} className="hover:bg-gray-50">
+      <td className="px-6 py-4 text-sm text-gray-900">{item.name}</td>
+      <td className="px-6 py-4 text-sm text-gray-500">{item.model}</td>
+      <td className="px-6 py-4 text-sm text-gray-500">{item.dimensions}</td>
+      <td className="px-6 py-4 text-sm text-gray-500">{formatBytes(item.size)}</td>
+      <td className="px-6 py-4 text-sm text-gray-500">{formatDate(item.createdAt)}</td>
+    </tr>
+  );
+
+  const renderHeaders = () => {
     switch (type) {
       case 'datasets':
         return (
           <tr>
-            <th className="px-4 py-2"></th>
-            <th className="px-4 py-2">Name</th>
-            <th className="px-4 py-2">Size</th>
-            <th className="px-4 py-2">Created</th>
-            <th className="px-4 py-2">Actions</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
         );
       case 'chunks':
         return (
           <tr>
-            <th className="px-4 py-2"></th>
-            <th className="px-4 py-2">Name</th>
-            <th className="px-4 py-2">Size</th>
-            <th className="px-4 py-2">Created</th>
-            <th className="px-4 py-2">Actions</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preview</th>
+            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
         );
       case 'vectors':
         return (
           <tr>
-            <th className="px-4 py-2"></th>
-            <th className="px-4 py-2">Name</th>
-            <th className="px-4 py-2">Size</th>
-            <th className="px-4 py-2">Created</th>
-            <th className="px-4 py-2">Model</th>
-            <th className="px-4 py-2">Actions</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dimensions</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
           </tr>
         );
-      default:
-        return null;
     }
   };
 
-  const renderRow = (item: any) => {
-    const isExpanded = expandedRows[item.id];
-    const isProcessing = processingStates[item.id];
-
-    switch (type) {
-      case 'datasets':
-        return (
-          <React.Fragment key={item.id}>
-            <tr className="hover:bg-gray-50">
-              <td className="px-4 py-2">
-                <button
-                  onClick={() => toggleRow(item.id)}
-                  className="p-1 hover:bg-gray-200 rounded"
-                >
-                  {isExpanded ? (
-                    <ChevronUpIcon className="h-4 w-4" />
-                  ) : (
-                    <ChevronDownIcon className="h-4 w-4" />
-                  )}
-                </button>
-              </td>
-              <td className="px-4 py-2">{item.name}</td>
-              <td className="px-4 py-2">{formatBytes(item.size)}</td>
-              <td className="px-4 py-2">
-                {new Date(item.createdAt).toLocaleString()}
-              </td>
-              <td className="px-4 py-2">
-                <button
-                  onClick={() => onChunk?.(item.id)}
-                  disabled={isProcessing}
-                  className={`mr-2 px-3 py-1 rounded text-sm ${
-                    isProcessing
-                      ? 'bg-gray-300 cursor-not-allowed'
-                      : 'bg-blue-500 hover:bg-blue-600 text-white'
-                  }`}
-                >
-                  {isProcessing ? 'Processing...' : 'Chunk'}
-                </button>
-              </td>
-            </tr>
-            {isExpanded && (
-              <tr>
-                <td colSpan={5} className="px-4 py-2 bg-gray-50">
-                  <div className="text-sm">
-                    <p><strong>ID:</strong> {item.id}</p>
-                    <p><strong>Full Name:</strong> {item.name}</p>
-                  </div>
-                </td>
-              </tr>
-            )}
-          </React.Fragment>
-        );
-      case 'chunks':
-        return (
-          <React.Fragment key={item.id}>
-            <tr className="hover:bg-gray-50">
-              <td className="px-4 py-2">
-                <button
-                  onClick={() => toggleRow(item.id)}
-                  className="p-1 hover:bg-gray-200 rounded"
-                >
-                  {isExpanded ? (
-                    <ChevronUpIcon className="h-4 w-4" />
-                  ) : (
-                    <ChevronDownIcon className="h-4 w-4" />
-                  )}
-                </button>
-              </td>
-              <td className="px-4 py-2">{item.name}</td>
-              <td className="px-4 py-2">{formatBytes(item.size)}</td>
-              <td className="px-4 py-2">
-                {new Date(item.createdAt).toLocaleString()}
-              </td>
-              <td className="px-4 py-2">
-                <button
-                  onClick={() => onVectorize?.(item.id)}
-                  disabled={isProcessing}
-                  className={`mr-2 px-3 py-1 rounded text-sm ${
-                    isProcessing
-                      ? 'bg-gray-300 cursor-not-allowed'
-                      : 'bg-green-500 hover:bg-green-600 text-white'
-                  }`}
-                >
-                  {isProcessing ? 'Processing...' : 'Vectorize'}
-                </button>
-              </td>
-            </tr>
-            {isExpanded && (
-              <tr>
-                <td colSpan={5} className="px-4 py-2 bg-gray-50">
-                  <div className="text-sm">
-                    <p><strong>ID:</strong> {item.id}</p>
-                    <p><strong>Dataset ID:</strong> {item.datasetId}</p>
-                    <p><strong>Preview:</strong></p>
-                    <pre className="mt-2 p-2 bg-gray-100 rounded overflow-auto max-h-40">
-                      {item.preview}
-                    </pre>
-                  </div>
-                </td>
-              </tr>
-            )}
-          </React.Fragment>
-        );
-      case 'vectors':
-        return (
-          <React.Fragment key={item.id}>
-            <tr className="hover:bg-gray-50">
-              <td className="px-4 py-2">
-                <button
-                  onClick={() => toggleRow(item.id)}
-                  className="p-1 hover:bg-gray-200 rounded"
-                >
-                  {isExpanded ? (
-                    <ChevronUpIcon className="h-4 w-4" />
-                  ) : (
-                    <ChevronDownIcon className="h-4 w-4" />
-                  )}
-                </button>
-              </td>
-              <td className="px-4 py-2">{item.name}</td>
-              <td className="px-4 py-2">{formatBytes(item.size)}</td>
-              <td className="px-4 py-2">
-                {new Date(item.createdAt).toLocaleString()}
-              </td>
-              <td className="px-4 py-2">{item.model}</td>
-              <td className="px-4 py-2">
-                {/* Add vector-specific actions here */}
-              </td>
-            </tr>
-            {isExpanded && (
-              <tr>
-                <td colSpan={6} className="px-4 py-2 bg-gray-50">
-                  <div className="text-sm">
-                    <p><strong>ID:</strong> {item.id}</p>
-                    <p><strong>Dataset ID:</strong> {item.datasetId}</p>
-                    <p><strong>Dimensions:</strong> {item.dimensions}</p>
-                    <p><strong>Model:</strong> {item.model}</p>
-                  </div>
-                </td>
-              </tr>
-            )}
-          </React.Fragment>
-        );
-      default:
-        return null;
-    }
+  const renderRows = () => {
+    return data.map((item) => {
+      switch (type) {
+        case 'datasets':
+          return renderDatasetRow(item as DatasetInfo);
+        case 'chunks':
+          return renderChunkRow(item as ChunkInfo);
+        case 'vectors':
+          return renderVectorRow(item as VectorInfo);
+      }
+    });
   };
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full bg-white shadow-sm rounded-lg">
-        <thead className="bg-gray-50">
-          {renderHeader()}
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {data.map(renderRow)}
-        </tbody>
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">{renderHeaders()}</thead>
+        <tbody className="bg-white divide-y divide-gray-200">{renderRows()}</tbody>
       </table>
+      {data.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          No {type} found
+        </div>
+      )}
     </div>
   );
 }

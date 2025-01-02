@@ -67,26 +67,35 @@ export default function Dashboard() {
 
   async function handleChunk(datasetId: string) {
     try {
+      console.log('Setting processing state for dataset:', datasetId);
       setProcessingStates(prev => ({ ...prev, [datasetId]: true }));
       
       console.log('Starting chunking process for dataset:', datasetId);
       const response = await fetch(`/api/datasets/${datasetId}/chunk`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
+      console.log('Raw response:', response);
       const data = await response.json();
-      console.log('Chunking response:', data);
+      console.log('Chunking response data:', data);
 
       if (!response.ok) {
+        console.error('Response not OK. Status:', response.status, 'Status text:', response.statusText);
         throw new Error(data.error || 'Chunking failed');
       }
 
       console.log('Chunking successful, fetching updated data...');
       await fetchData();
+      console.log('Data fetched successfully, switching to chunks view');
       setActiveView('chunks');
     } catch (error) {
       console.error('Chunking error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to create chunks');
     } finally {
+      console.log('Resetting processing state for dataset:', datasetId);
       setProcessingStates(prev => ({ ...prev, [datasetId]: false }));
     }
   }
@@ -95,8 +104,14 @@ export default function Dashboard() {
     try {
       setProcessingStates(prev => ({ ...prev, [chunkId]: true }));
       
+      // Find the dataset ID for this chunk
+      const chunk = chunks.find(c => c.id === chunkId);
+      if (!chunk) {
+        throw new Error('Chunk not found');
+      }
+      
       console.log('Starting vectorization process for chunk:', chunkId);
-      const response = await fetch(`/api/datasets/${chunkId}/vectorize`, {
+      const response = await fetch(`/api/datasets/${chunk.datasetId}/vectorize`, {
         method: 'POST',
       });
 

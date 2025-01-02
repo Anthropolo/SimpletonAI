@@ -40,7 +40,7 @@ async function getDatasets(): Promise<DatasetInfo[]> {
     }
   }
   
-  return datasets;
+  return datasets.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 async function getChunks(datasetId?: string): Promise<ChunkInfo[]> {
@@ -61,23 +61,23 @@ async function getChunks(datasetId?: string): Promise<ChunkInfo[]> {
     const files = fs.readdirSync(datasetDir);
     
     for (const file of files) {
+      if (!file.endsWith('.txt')) continue;
+
       const filePath = path.join(datasetDir, file);
       const stats = fs.statSync(filePath);
       
-      if (stats.isFile() && file.endsWith('.txt')) {
-        // Read a preview of the chunk content
-        const content = fs.readFileSync(filePath, 'utf-8');
-        const preview = content.slice(0, 200) + (content.length > 200 ? '...' : '');
-        
-        chunks.push({
-          id: path.parse(file).name,
-          name: file,
-          datasetId: dataset,
-          size: stats.size,
-          createdAt: stats.birthtime.toISOString(),
-          preview
-        });
-      }
+      // Read a preview of the chunk content
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const preview = content.slice(0, 200) + (content.length > 200 ? '...' : '');
+      
+      chunks.push({
+        id: path.parse(file).name,
+        name: file,
+        datasetId: dataset,
+        size: stats.size,
+        createdAt: stats.birthtime.toISOString(),
+        preview
+      });
     }
   }
   
@@ -102,20 +102,24 @@ async function getVectors(datasetId?: string): Promise<VectorInfo[]> {
     const files = fs.readdirSync(datasetDir);
     
     for (const file of files) {
+      if (!file.endsWith('.json') || file === 'vector_store.json') continue;
+
       const filePath = path.join(datasetDir, file);
       const stats = fs.statSync(filePath);
       
-      if (stats.isFile() && file.endsWith('.json')) {
-        const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+      try {
+        const vectorData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
         vectors.push({
-          id: path.parse(file).name,
+          id: vectorData.id,
           name: file,
           datasetId: dataset,
           size: stats.size,
-          createdAt: stats.birthtime.toISOString(),
-          dimensions: content.dimensions || 0,
-          model: content.model || 'unknown'
+          createdAt: vectorData.createdAt || stats.birthtime.toISOString(),
+          dimensions: vectorData.dimensions,
+          model: vectorData.model
         });
+      } catch (error) {
+        console.error(`Error parsing vector file ${file}:`, error);
       }
     }
   }

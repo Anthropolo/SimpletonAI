@@ -1,54 +1,71 @@
 import { NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { spawn } from 'child_process';
 import path from 'path';
-
-const execAsync = promisify(exec);
 
 export async function POST(
   request: Request,
   { params }: { params: { id: string } }
-) {
+): Promise<Response> {
   try {
+    console.log('Received chunk request for dataset:', params.id);
     const datasetId = params.id;
     
     // First, ensure the CLI is built
     console.log('Building CLI...');
-    await execAsync('npm run build:cli', { cwd: process.cwd() });
-    
-    // Execute the compiled CLI command
     const cliPath = path.resolve(process.cwd(), 'dist/cli/index.js');
-    const command = `node ${cliPath} chunk ${datasetId}`;
-    console.log('Executing command:', command);
-    
-    const { stdout, stderr } = await execAsync(command);
-    
-    // Log the output for debugging
-    if (stdout) console.log('Command output:', stdout);
-    if (stderr) console.error('Command stderr:', stderr);
+    console.log('CLI path:', cliPath);
 
-    // Check for actual errors in stderr
-    if (stderr && stderr.includes('Error:')) {
-      console.error('Chunking error:', stderr);
-      return NextResponse.json({ error: stderr }, { status: 500 });
-    }
-    
-    return NextResponse.json({ success: true, output: stdout });
+    return await new Promise<Response>((resolve, reject) => {
+      const child = spawn('node', [cliPath, 'chunk', datasetId], {
+        cwd: process.cwd(),
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      child.stdout.on('data', (data) => {
+        const str = data.toString();
+        console.log('CLI output:', str);
+        stdout += str;
+      });
+
+      child.stderr.on('data', (data) => {
+        const str = data.toString();
+        console.error('CLI error:', str);
+        stderr += str;
+      });
+
+      child.on('close', (code) => {
+        console.log('CLI process exited with code:', code);
+        
+        if (code !== 0) {
+          console.error('CLI process failed:', stderr);
+          resolve(NextResponse.json({ error: stderr || 'Chunking failed' }, { status: 500 }));
+          return;
+        }
+
+        if (stderr && stderr.includes('Error:')) {
+          console.error('Chunking error detected in stderr:', stderr);
+          resolve(NextResponse.json({ error: stderr }, { status: 500 }));
+          return;
+        }
+
+        console.log('Chunking completed successfully');
+        resolve(NextResponse.json({ success: true, output: stdout }));
+      });
+
+      child.on('error', (error) => {
+        console.error('Failed to start CLI process:', error);
+        resolve(NextResponse.json(
+          { error: error instanceof Error ? error.message : 'Failed to start CLI process' },
+          { status: 500 }
+        ));
+      });
+    });
   } catch (error) {
     console.error('Error during chunking:', error);
-    
-    // Extract the actual error message
-    let errorMessage = error instanceof Error ? error.message : 'Failed to process chunking request';
-    if (error instanceof Error && 'stderr' in error) {
-      // @ts-ignore
-      const stderr = error.stderr as string;
-      if (stderr && stderr.includes('Error:')) {
-        errorMessage = stderr.split('Error:')[1].trim();
-      }
-    }
-    
     return NextResponse.json(
-      { error: errorMessage },
+      { error: error instanceof Error ? error.message : 'Failed to process chunking request' },
       { status: 500 }
     );
   }

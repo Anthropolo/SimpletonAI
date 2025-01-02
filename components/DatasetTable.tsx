@@ -3,8 +3,11 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { DatasetInfo } from '@/types/data';
 
-// ...existing code...
+interface DatasetTableProps {
+  datasets: DatasetInfo[];
+}
 
 export function DatasetTable({ datasets }: DatasetTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());

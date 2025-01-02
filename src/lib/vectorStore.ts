@@ -7,12 +7,23 @@ interface Vector {
   metadata?: Record<string, any>;
 }
 
+interface VectorMetadata {
+  id: string;
+  dimensions: number;
+  model: string;
+  createdAt: string;
+}
+
 export class VectorStore {
   private vectors: Vector[] = [];
   private dimension: number;
+  private model: string;
+  private datasetId: string;
 
-  constructor(dimension: number = 384) {
+  constructor(dimension: number = 768, model: string = 'nomic-embed-text', datasetId: string) {
     this.dimension = dimension;
+    this.model = model;
+    this.datasetId = datasetId;
   }
 
   async addVectors(vectors: number[][], ids: number[]) {
@@ -62,14 +73,74 @@ export class VectorStore {
   }
 
   async save(filepath: string) {
-    // For demonstration, we'll just log that we're saving
-    console.log(`[VectorStore] Would save vectors to: ${filepath}`);
+    const vectorsDir = path.join(process.cwd(), 'data', 'vectors', this.datasetId);
+    
+    // Create vectors directory if it doesn't exist
+    if (!fs.existsSync(vectorsDir)) {
+      fs.mkdirSync(vectorsDir, { recursive: true });
+    }
+
+    // Save each vector with its metadata
+    for (const vector of this.vectors) {
+      const vectorId = `vector_${vector.id}`;
+      const vectorPath = path.join(vectorsDir, `${vectorId}.json`);
+      
+      const vectorData = {
+        id: vectorId,
+        vector: vector.vector,
+        dimensions: this.dimension,
+        model: this.model,
+        createdAt: new Date().toISOString(),
+        ...vector.metadata
+      };
+
+      fs.writeFileSync(vectorPath, JSON.stringify(vectorData, null, 2));
+    }
+
+    // Save the vector store metadata
+    const storeMetadata: VectorMetadata = {
+      id: this.datasetId,
+      dimensions: this.dimension,
+      model: this.model,
+      createdAt: new Date().toISOString()
+    };
+
+    const storePath = path.join(vectorsDir, 'vector_store.json');
+    fs.writeFileSync(storePath, JSON.stringify(storeMetadata, null, 2));
+
     return true;
   }
 
   async load(filepath: string) {
-    // For demonstration, we'll just log that we're loading
-    console.log(`[VectorStore] Would load vectors from: ${filepath}`);
+    const vectorsDir = path.join(process.cwd(), 'data', 'vectors', this.datasetId);
+    
+    if (!fs.existsSync(vectorsDir)) {
+      return false;
+    }
+
+    const files = fs.readdirSync(vectorsDir);
+    this.vectors = [];
+
+    for (const file of files) {
+      if (!file.endsWith('.json') || file === 'vector_store.json') continue;
+
+      const vectorPath = path.join(vectorsDir, file);
+      try {
+        const vectorData = JSON.parse(fs.readFileSync(vectorPath, 'utf-8'));
+        this.vectors.push({
+          id: parseInt(vectorData.id.replace('vector_', '')),
+          vector: vectorData.vector,
+          metadata: {
+            dimensions: vectorData.dimensions,
+            model: vectorData.model,
+            createdAt: vectorData.createdAt
+          }
+        });
+      } catch (error) {
+        console.error(`Error loading vector file ${file}:`, error);
+      }
+    }
+
     return true;
   }
 }
