@@ -1,0 +1,14 @@
+{
+  "vectorStore": {
+    "type": "memory",
+    "dimension": 384
+  },
+  "ollama": {
+    "baseUrl": "http://localhost:11434",
+    "defaultModel": "llama2"
+  },
+  "storage": {
+    "type": "local",
+    "uploadDir": "data/uploads"
+  }
+}

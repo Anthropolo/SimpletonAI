@@ -1,11 +1,13 @@
 #!/usr/bin/env node
+
 import { Command } from 'commander';
-import { initializeProject } from './commands/init';
-import { uploadDataset } from './commands/upload';
-import { chunkData } from './commands/chunk';
-import { vectorize } from './commands/vectorize';
-import { trainModel } from './commands/train';
-import { startServer } from './commands/serve';
+import { initializeProject } from './commands/init.js';
+import { uploadDataset } from './commands/upload.js';
+import { chunkData } from './commands/chunk.js';
+import { vectorize } from './commands/vectorize.js';
+import { trainModel } from './commands/train.js';
+import { startServer } from './commands/serve.js';
+import { listDatasets, listChunks, listVectors } from './commands/list.js';
 
 const program = new Command();
 
@@ -17,40 +19,115 @@ program
 program
   .command('init')
   .description('Initialize a new Simpleton AI project')
-  .action(initializeProject);
+  .action(async () => {
+    try {
+      await initializeProject();
+    } catch (error) {
+      console.error('Failed to initialize project:', error);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('list')
+  .description('List datasets, chunks, or vectors')
+  .argument('[type]', 'Type of data to list (datasets, chunks, vectors)', 'datasets')
+  .option('-d, --dataset <id>', 'Filter by dataset ID')
+  .action(async (type, options) => {
+    try {
+      switch (type) {
+        case 'datasets':
+          await listDatasets();
+          break;
+        case 'chunks':
+          await listChunks(options.dataset);
+          break;
+        case 'vectors':
+          await listVectors(options.dataset);
+          break;
+        default:
+          console.error('Invalid type. Must be one of: datasets, chunks, vectors');
+          process.exit(1);
+      }
+    } catch (error) {
+      console.error(`Failed to list ${type}:`, error);
+      process.exit(1);
+    }
+  });
 
 program
   .command('upload')
   .description('Upload a dataset (Excel/PDF)')
   .argument('<path>', 'Path to the dataset file')
   .option('-t, --type <type>', 'Type of dataset (excel/pdf)')
-  .action(uploadDataset);
+  .action(async (path, options) => {
+    try {
+      const datasetId = await uploadDataset(path, options);
+      console.log(`Dataset uploaded with ID: ${datasetId}`);
+    } catch (error) {
+      console.error('Failed to upload dataset:', error);
+      process.exit(1);
+    }
+  });
 
 program
   .command('chunk')
   .description('Chunk uploaded dataset')
   .argument('<datasetId>', 'ID of the uploaded dataset')
   .option('-s, --size <size>', 'Chunk size', '1000')
-  .action(chunkData);
+  .action(async (datasetId, options) => {
+    try {
+      const chunkCount = await chunkData(datasetId, options);
+      console.log(`Created ${chunkCount} chunks`);
+    } catch (error) {
+      console.error('Failed to chunk data:', error);
+      process.exit(1);
+    }
+  });
 
 program
   .command('vectorize')
   .description('Vectorize chunks using Ollama')
   .argument('<datasetId>', 'ID of the dataset')
   .option('-m, --model <model>', 'Ollama model to use', 'llama2')
-  .action(vectorize);
+  .action(async (datasetId, options) => {
+    try {
+      const vectorCount = await vectorize(datasetId, options);
+      console.log(`Vectorized ${vectorCount} chunks`);
+    } catch (error) {
+      console.error('Failed to vectorize data:', error);
+      process.exit(1);
+    }
+  });
 
 program
   .command('train')
   .description('Train a model using Ollama')
   .argument('<datasetId>', 'ID of the dataset')
   .option('-m, --model <model>', 'Base model to fine-tune', 'llama2')
-  .action(trainModel);
+  .action(async (datasetId, options) => {
+    try {
+      const metadata = await trainModel(datasetId, options);
+      console.log('Training completed successfully');
+      console.log('Model metadata:', JSON.stringify(metadata, null, 2));
+    } catch (error) {
+      console.error('Failed to train model:', error);
+      process.exit(1);
+    }
+  });
 
 program
   .command('serve')
   .description('Start the inference server')
   .option('-p, --port <port>', 'Port to run the server on', '3000')
-  .action(startServer);
+  .action(async (options) => {
+    try {
+      await startServer(options);
+      // Server will keep running until terminated
+    } catch (error) {
+      console.error('Failed to start server:', error);
+      process.exit(1);
+    }
+  });
 
 program.parse();

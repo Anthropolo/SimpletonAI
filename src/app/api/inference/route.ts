@@ -1,20 +1,21 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextResponse } from 'next/server';
 import { OllamaClient } from '@/lib/ollamaClient';
 import { VectorStore } from '@/lib/vectorStore';
 
 const ollama = new OllamaClient();
 const vectorStore = new VectorStore();
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
+export async function POST(request: Request) {
   try {
-    const { query, model = 'llama2' } = req.body;
+    const body = await request.json();
+    const { query, model = 'llama2' } = body;
+
+    if (!query) {
+      return NextResponse.json(
+        { error: 'Query is required' },
+        { status: 400 }
+      );
+    }
 
     // Get embedding for the query
     const queryEmbedding = await ollama.getEmbedding(query, model);
@@ -25,12 +26,15 @@ export default async function handler(
     // Generate completion using context
     const completion = await ollama.generateCompletion(query, model);
 
-    return res.status(200).json({
+    return NextResponse.json({
       completion,
       similarDocs: searchResults
     });
   } catch (error) {
     console.error('Inference error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
