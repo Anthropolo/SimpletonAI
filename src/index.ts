@@ -1,10 +1,13 @@
-// Core components
-export { VectorStore } from './lib/vectorStore';
+// Core functionality
 export { OllamaClient } from './lib/ollamaClient';
+export { VectorStore } from './lib/vectorStore';
+export { FileLoader } from './lib/fileLoader';
+export { TextSplitter } from './lib/textSplitter';
 
 // Application templates
 export { default as createRagApplication } from './examples/rag';
 export { default as createChatbot } from './examples/chatbot';
+export type { Message as ChatMessage, ChatbotOptions } from './examples/chatbot';
 export { default as createAgent } from './examples/agent';
 
 // Types

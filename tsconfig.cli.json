@@ -13,6 +13,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/cli/**/*", "src/lib/**/*"],
+  "include": ["src/cli/**/*", "src/lib/**/*", "examples/lib/**/*"],
   "exclude": ["node_modules"]
 }

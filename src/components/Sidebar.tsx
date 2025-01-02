@@ -1,12 +1,20 @@
 'use client';
 
+type ViewType = 'datasets' | 'chunks' | 'vectors';
+
+interface SidebarItem {
+  id: ViewType;
+  label: string;
+  icon: string;
+}
+
 interface SidebarProps {
-  activeItem: string;
-  onItemClick: (item: string) => void;
+  activeItem: ViewType;
+  onItemClick: (item: ViewType) => void;
 }
 
 export default function Sidebar({ activeItem, onItemClick }: SidebarProps) {
-  const items = [
+  const items: SidebarItem[] = [
     { id: 'datasets', label: 'Datasets', icon: '📊' },
     { id: 'chunks', label: 'Chunks', icon: '🧩' },
     { id: 'vectors', label: 'Vectors', icon: '🔢' },

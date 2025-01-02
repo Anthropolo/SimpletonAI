@@ -1,5 +1,5 @@
-import { OllamaClient } from '../src/lib/ollamaClient';
-import { VectorStore } from '../src/lib/vectorStore';
+import { OllamaClient } from '../lib/ollamaClient';
+import { VectorStore } from '../lib/vectorStore';
 
 export interface Tool {
   name: string;

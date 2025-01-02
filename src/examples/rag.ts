@@ -1,5 +1,5 @@
-import { VectorStore } from '../src/lib/vectorStore';
-import { OllamaClient } from '../src/lib/ollamaClient';
+import { OllamaClient } from '../lib/ollamaClient';
+import { VectorStore } from '../lib/vectorStore';
 
 interface Document {
   id: number;
