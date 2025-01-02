@@ -3,17 +3,48 @@
   "version": "0.1.0",
   "description": "NextJS-based AI framework for data processing and model training",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "simpleton": "./dist/cli/index.js"
   },
   "scripts": {
     "dev": "next dev",
-    "build": "npm run build:cli && npm run build:next",
+    "build": "npm run build:cli && npm run build:next && npm run build:lib",
     "build:cli": "tsc -p tsconfig.cli.json",
     "build:next": "next build",
+    "build:lib": "tsc -p tsconfig.lib.json",
     "start": "next start",
-    "cli": "node ./dist/cli/index.js"
+    "cli": "node ./dist/cli/index.js",
+    "prepublishOnly": "npm run build"
   },
+  "files": [
+    "dist",
+    "src",
+    "examples",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "ai",
+    "machine-learning",
+    "nextjs",
+    "ollama",
+    "rag",
+    "chatbot",
+    "vector-store",
+    "embeddings",
+    "typescript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/SimpletonAI"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/SimpletonAI/issues"
+  },
+  "homepage": "https://github.com/yourusername/SimpletonAI#readme",
   "dependencies": {
     "@heroicons/react": "^2.1.1",
     "@types/node": "^20.11.5",
@@ -39,5 +70,13 @@
   "devDependencies": {
     "@types/pdf-parse": "^1.1.4",
     "ts-node": "^10.9.0"
+  },
+  "peerDependencies": {
+    "next": ">=14.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

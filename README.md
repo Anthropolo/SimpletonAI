@@ -33,14 +33,51 @@ A NextJS-based backend framework for AI tasks with built-in CLI, Ollama integrat
 npm install simpleton-ai
 ```
 
-2. Initialize your project:
+2. Start Ollama (required for embeddings and inference):
 ```bash
-npx simpleton init
+ollama serve
 ```
 
-3. Start the development server:
+3. Create a new Next.js project with SimpletonAI:
+```bash
+npx create-next-app@latest my-ai-app --typescript --tailwind
+cd my-ai-app
+```
+
+4. Add SimpletonAI to your project:
+```typescript
+// pages/api/chat.ts
+import { createChatbot } from 'simpleton-ai';
+
+export default async function handler(req, res) {
+  const chatbot = await createChatbot();
+  const response = await chatbot.chat(req.body.message);
+  res.json({ response });
+}
+```
+
+5. Start the development server:
 ```bash
 npm run dev
+```
+
+Visit `http://localhost:3000` to see your AI application in action!
+
+## CLI Usage
+
+After installing SimpletonAI, you can use the CLI globally:
+```bash
+npx simpleton-ai <command>
+```
+
+Or add it to your package.json scripts:
+```json
+{
+  "scripts": {
+    "process-data": "simpleton-ai upload ./data/knowledge_base.csv",
+    "create-vectors": "simpleton-ai vectorize"
+  }
+}
 ```
 
 ## Use Cases
@@ -98,35 +135,6 @@ async function main() {
     "Analyze the weather data and summarize the trends"
   );
 }
-```
-
-## CLI Usage
-
-### Data Processing Pipeline
-
-1. Upload your dataset:
-```bash
-simpleton upload ./data/knowledge_base.csv
-```
-
-2. Create chunks:
-```bash
-simpleton chunk <dataset-id>
-```
-
-3. Generate embeddings:
-```bash
-simpleton vectorize <dataset-id>
-```
-
-### Vector Operations
-
-```bash
-# List all vectors
-simpleton list vectors
-
-# Search vectors
-simpleton search "your query here"
 ```
 
 ## API Reference

@@ -1,0 +1,46 @@
+# Development files
+.git
+.github
+.vscode
+.next
+node_modules
+coverage
+test
+tests
+__tests__
+*.test.*
+*.spec.*
+
+# Source files (since we're publishing compiled code)
+src/**/*.test.ts
+src/**/*.spec.ts
+
+# Configuration files
+.eslintrc
+.prettierrc
+.editorconfig
+tsconfig.json
+tsconfig.*.json
+jest.config.js
+
+# Documentation and examples (except the ones we want to publish)
+docs
+wiki
+*.md
+!README.md
+!LICENSE
+
+# Build artifacts
+*.log
+.DS_Store
+.env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Data directories (should be created by the user)
+data/uploads
+data/chunks
+data/vectors
+data/models
