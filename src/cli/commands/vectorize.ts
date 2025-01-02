@@ -47,7 +47,12 @@ export async function vectorizeData(datasetId: string, options: VectorizeOptions
 
     // Initialize Ollama client and vector store
     const ollama = new OllamaClient();
-    const vectorStore = new VectorStore(768, model, matchingDir);
+    const vectorStore = new VectorStore({
+      dimension: 768,
+      model: model,
+      datasetId: matchingDir,
+      similarity: 'cosine'
+    });
 
     // Process each chunk
     console.log(`Processing ${chunkFiles.length} chunks with model ${model}...`);
@@ -59,26 +64,28 @@ export async function vectorizeData(datasetId: string, options: VectorizeOptions
 
         // Get embedding from Ollama
         console.log(`Getting embedding for chunk ${index + 1}/${chunkFiles.length}...`);
-        const embedding = await ollama.getEmbedding(content, model);
+        const embedding = await ollama.getEmbedding(content);
 
         // Add to vector store
         await vectorStore.addVectors([embedding], [index]);
-
-        // Log progress
-        console.log(` Processed chunk ${index + 1}/${chunkFiles.length}`);
       } catch (error) {
         console.error(`Error processing chunk ${file}:`, error);
         throw new Error(`Failed to process chunk ${file}`);
       }
     }
 
-    // Save the vector store
-    await vectorStore.save('');
+    // Save vector store
+    try {
+      await vectorStore.save(vectorsDir);
+      console.log('Successfully saved vector store');
+    } catch (error) {
+      console.error('Error saving vector store:', error);
+      throw new Error('Failed to save vector store');
+    }
 
-    console.log(` Created vectors for ${chunkFiles.length} chunks using model ${model}`);
-    return chunkFiles.length;
+    console.log(`Successfully vectorized ${chunkFiles.length} chunks`);
   } catch (error) {
-    console.error('Error in vectorizeData:', error);
+    console.error('Vectorization error:', error);
     throw error;
   }
 }

@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { DatasetInfo } from '@/types/data';
+import { DatasetInfo } from '../src/types/data';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableHead,
+} from './ui/table';
 
 interface DatasetTableProps {
   datasets: DatasetInfo[];
@@ -36,11 +44,20 @@ export function DatasetTable({ datasets }: DatasetTableProps) {
   return (
     <div className="rounded-md border">
       <Table>
-        // ...existing code for table header...
+        <TableHeader>
+          <TableRow>
+            <TableHead></TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Size</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
         <TableBody>
           {datasets.map((dataset) => (
-            <>
-              <TableRow key={dataset.id}>
+            <React.Fragment key={dataset.id}>
+              <TableRow>
                 <TableCell className="cursor-pointer" onClick={() => toggleRow(dataset.id)}>
                   {expandedRows.has(dataset.id) ? (
                     <ChevronDown className="h-4 w-4" />
@@ -48,36 +65,37 @@ export function DatasetTable({ datasets }: DatasetTableProps) {
                     <ChevronRight className="h-4 w-4" />
                   )}
                 </TableCell>
-                // ...existing cells...
+                <TableCell>{dataset.name}</TableCell>
+                <TableCell>{dataset.type}</TableCell>
+                <TableCell>{dataset.size}</TableCell>
+                <TableCell>{dataset.status}</TableCell>
+                <TableCell>
+                  <button
+                    onClick={() => handleChunk(dataset.id)}
+                    className="mr-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Chunk
+                  </button>
+                  <button
+                    onClick={() => handleVectorize(dataset.id)}
+                    className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                  >
+                    Vectorize
+                  </button>
+                </TableCell>
               </TableRow>
               {expandedRows.has(dataset.id) && (
                 <TableRow>
-                  <TableCell colSpan={5}>
-                    <div className="p-4 bg-gray-50">
-                      <h4 className="font-medium mb-2">Additional Metadata</h4>
-                      <p>Created: {new Date(dataset.createdAt).toLocaleString()}</p>
-                      <p>Last Modified: {new Date(dataset.updatedAt).toLocaleString()}</p>
-                      <div className="mt-4 space-x-4">
-                        {!dataset.isChunked ? (
-                          <Button onClick={() => handleChunk(dataset.id)}>Chunk</Button>
-                        ) : (
-                          <Button onClick={() => router.push(`/datasets/${dataset.id}/chunks`)}>
-                            View Chunks
-                          </Button>
-                        )}
-                        {!dataset.isVectorized ? (
-                          <Button onClick={() => handleVectorize(dataset.id)}>Vectorize</Button>
-                        ) : (
-                          <Button onClick={() => router.push(`/datasets/${dataset.id}/vectors`)}>
-                            View Vectors
-                          </Button>
-                        )}
-                      </div>
+                  <TableCell colSpan={6} className="bg-gray-50 p-4">
+                    <div className="text-sm">
+                      <p><strong>ID:</strong> {dataset.id}</p>
+                      <p><strong>Created:</strong> {new Date(dataset.createdAt).toLocaleString()}</p>
+                      <p><strong>Path:</strong> {dataset.path}</p>
                     </div>
                   </TableCell>
                 </TableRow>
               )}
-            </>
+            </React.Fragment>
           ))}
         </TableBody>
       </Table>

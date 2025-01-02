@@ -1,16 +1,24 @@
 import { OllamaClient } from '../src/lib/ollamaClient';
 import { VectorStore } from '../src/lib/vectorStore';
 
-interface Tool {
+export interface Tool {
   name: string;
   description: string;
   execute: (args: any) => Promise<any>;
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
 async function createAgent() {
-  const ollama = new OllamaClient('http://127.0.0.1:11434');
+  const ollama = new OllamaClient('http://127.0.0.1:11434', 'llama2');
   const vectorStore = new VectorStore({
     dimension: 768,
+    model: 'nomic-embed-text',
     similarity: 'cosine'
   });
 
@@ -44,31 +52,49 @@ async function createAgent() {
         Respond in JSON format with a list of steps, each containing tool name and arguments.
       `;
 
-      const plan = JSON.parse(await ollama.generateText(planningPrompt));
+      const planText = await ollama.generateText(planningPrompt, {
+        temperature: 0.7,
+        maxTokens: 500
+      });
+
+      let plan;
+      try {
+        plan = JSON.parse(planText);
+      } catch (error) {
+        console.error('Failed to parse plan:', planText);
+        throw new Error(`Failed to generate a valid plan: ${getErrorMessage(error)}`);
+      }
 
       // 2. Execute plan
       const results = [];
       for (const step of plan) {
         const tool = tools.find(t => t.name === step.tool);
-        if (tool) {
+        if (!tool) {
+          throw new Error(`Unknown tool: ${step.tool}`);
+        }
+        try {
           const result = await tool.execute(step.args);
           results.push(result);
+        } catch (error) {
+          throw new Error(`Failed to execute tool ${step.tool}: ${getErrorMessage(error)}`);
         }
       }
 
       // 3. Generate final response
       const responsePrompt = `
         Task: ${task}
-        Results from tools: ${JSON.stringify(results)}
+        Results: ${JSON.stringify(results, null, 2)}
         
-        Please provide a final response based on the tool results.
+        Please provide a natural language response summarizing the results.
       `;
 
-      return await ollama.generateText(responsePrompt);
-
+      return await ollama.generateText(responsePrompt, {
+        temperature: 0.7,
+        maxTokens: 1000
+      });
     } catch (error) {
-      console.error('Agent error:', error);
-      throw error;
+      console.error('Error executing task:', error);
+      return `I encountered an error while processing your request: ${getErrorMessage(error)}`;
     }
   }
 

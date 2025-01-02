@@ -31,11 +31,25 @@ async function getDatasets(): Promise<DatasetInfo[]> {
     const stats = fs.statSync(filePath);
     
     if (stats.isFile()) {
+      // Check if chunks exist for this dataset
+      const chunksDir = path.join(process.cwd(), 'data', 'chunks', path.parse(file).name);
+      const isChunked = fs.existsSync(chunksDir);
+
+      // Check if vectors exist for this dataset
+      const vectorsDir = path.join(process.cwd(), 'data', 'vectors', path.parse(file).name);
+      const isVectorized = fs.existsSync(vectorsDir);
+
       datasets.push({
         id: path.parse(file).name,
         name: file,
         size: stats.size,
-        createdAt: stats.birthtime.toISOString()
+        createdAt: stats.birthtime.toISOString(),
+        updatedAt: stats.mtime.toISOString(),
+        path: filePath,
+        type: path.extname(file).slice(1) || 'unknown',
+        status: 'ready',
+        isChunked,
+        isVectorized
       });
     }
   }

@@ -3,6 +3,12 @@ export interface DatasetInfo {
   name: string;
   size: number;
   createdAt: string;
+  updatedAt: string;
+  path: string;
+  type: string;
+  status: string;
+  isChunked: boolean;
+  isVectorized: boolean;
 }
 
 export interface ChunkInfo {
